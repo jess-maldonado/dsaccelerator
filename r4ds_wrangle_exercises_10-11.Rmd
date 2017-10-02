@@ -1,0 +1,166 @@
+---
+title: "r4ds_wrangle_exercises_10-11"
+author: "Jessica Maldonado"
+date: "September 28, 2017"
+output: html_document
+---
+
+## 10.5 Exercises
+
+**1. How can you tell if an object is a tibble? (Hint: try printing mtcars, which is a regular data frame).**
+  
+  The clearest indicator is "A tibble: A x B". You will also get the data type shown under each column heading, which you don't get with a data frame.
+
+**2. Compare and contrast the following operations on a `data.frame` and equivalent tibble. What is different? Why might the default data frame behaviours cause you frustration?**
+
+`df <- data.frame(abc = 1, xyz = "a")`   
+`df$x`  
+`df[, "xyz"]`    
+`df[, c("abc", "xyz")]`
+
+Tibbles don't do partial matching for column extraction, while data frames do. So for `df$x`, the data set returns column "xyz", while the tibble returns an error. Partial matching may cause errors in analysis if there are similarly named columns, or you pull in something that you think is something else due to a typo. Additionally, the `df[, "xyz"]` using the data frame returns the different levels of the factor, not the column itself. So that's not helpful if you're trying to specifically see the full data.
+
+**3. If you have the name of a variable stored in an object, e.g. var <- "mpg", how can you extract the reference variable from a tibble?**
+
+This is a confusingly worded question, mainly because mpg is a data set name, but the question seems like it's asking about extracting a column. So for example, with `var <- "cyl"`, you could extract the cyl data with `mpg[var]`. If that's not the right answer, I'm unsure what's being asked.
+
+**4. Practice referring to non-syntactic names in the following data frame by:**
+
+`annoying <- tibble(`  
+```  `1` = 1:10,```  
+```  `2` = `1` * 2 + rnorm(length(`1`)) ```  
+`)`
+
+*a. Extracting the variable called 1.*
+
+```annoying$`1` ```
+
+*b. Plotting a scatterplot of 1 vs 2.*
+
+`annoying %>%`
+```  ggplot(mapping = aes(x = `1`, y = `2`)) +```  
+`  geom_point()`
+
+*c. Creating a new column called 3 which is 2 divided by 1.*
+
+`annoying %>%`  
+```  mutate(`3` = `2` / `1`)```
+
+
+*d. Renaming the columns to one, two and three.*
+
+` annoying <- annoying %>%`
+```  mutate("three" = `2` / `1`)```  
+`  names(annoying) [1] <- "one" `  
+`  names(annoying) [2] <- "two"`  
+`  names(annoying) [3] <- "three"`  
+
+`print(annoying)`
+
+**5. What does tibble::enframe() do? When might you use it?**
+
+It turns a vector into a two columned tibble. It would be helpful if you have a vector of data pairs that would be easier to work with as columns in a data frame or a tibble.
+
+**6. What option controls how many additional column names are printed at the footer of a tibble?**
+
+Options(tibble.max_extra_cols) will determine how many column names are printed at the bottom. The default is 100.
+
+
+
+## 11.2.2 Exercises
+
+**1.	What function would you use to read a file where fields were separated with "|"?** 
+
+Read_delim()
+
+**2.	Apart from file, skip, and comment, what other arguments do read_csv() and read_tsv()have in common?**
+
+Looking at the documentation for read_delim(), it looks like they have the exact same arguments, they just read different types of files.
+
+**3.	What are the most important arguments to read_fwf()?**
+
+File, col_positions, col_types, widths, start, end.
+
+**4.	Sometimes strings in a CSV file contain commas. To prevent them from causing problems they need to be surrounded by a quoting character, like " or '. By convention, read_csv() assumes that the quoting character will be ", and if you want to change it you'll need to use read_delim()instead. What arguments do you need to specify to read the following text into a data frame?**
+``` "x,y\n1,'a,b'" ```
+
+You have to specify the quote argument that determines which character is used to determine where strings exist. To use read_delim you would also have to specify that commas are the separating value.
+
+**5.	Identify what is wrong with each of the following inline CSV files. What happens when you run the code?**
+
+* `read_csv("a,b\n1,2,3\n4,5,6")`
+
+
+You get a 2x2 tibble because you've given two columns but three row values after the line breaks. You get 1, 2, 4, and 5 in the rows but not 3 or 6.
+
+* `read_csv("a,b,c\n1,2\n1,2,3,4")`
+
+This is another issue with differing numbers in the rows versus how many columns were originally designated. You don't get the 4 in a row because there are only 3 columns.
+
+* `read_csv("a,b\n\"1")`
+
+This runs to give the expected result, but the error is due to the additional quotation before 1. From the error message it looks like another closing quote was expected due to the quotations around 1. 
+
+* `read_csv("a,b\n1,2\na,b")`
+
+This one runs fine, but it looks like the 2nd row may have been intended as an "na" value but actually was "a" because of the line break.
+
+* `read_csv("a;b\n1;3")`
+	
+This is a 1x1 tibble of actual title a;b and row value of 1;3. Colons should be used to get the range of values. 
+
+## 11.3.5 Exercises
+
+**1.	What are the most important arguments to locale()?**
+
+Generally  the decimal_mark and grouping_mark for normal numbers, but the tz (timezone) and other date/time format arguments come into play when you're parsing dates.
+
+**2.	What happens if you try and set decimal_mark and grouping_mark to the same character? What happens to the default value of grouping_mark when you set decimal_mark to ","? What happens to the default value of decimal_mark when you set the grouping_mark to "."?**
+
+* You get an error telling you they have to be different.
+* The default grouping_mark switches to a period.
+* The default decimal_mark switches to a comma.
+
+**3.	I didn't discuss the date_format and time_format options to locale(). What do they do? Construct an example that shows when they might be useful.**
+
+They define the default date and time formats. If you're working with a European data set where their default date format is dd-mm-yyyy, but you want to use the familiar American format of mm-dd-yyyy, you would use the date_format to parse the data using your preferred format.
+
+**4.	If you live outside the US, create a new locale object that encapsulates the settings for the types of file you read most commonly.**
+
+I get to use the default locale settings, yay! 
+
+**5.	What's the difference between read_csv() and read_csv2()?**
+
+Read_csv() reads files with values separated by commas. Read_csv2() reads files with values separated by semicolons (common where comma used as decimal mark).
+
+
+**6.	What are the most common encodings used in Europe? What are the most common encodings used in Asia? Do some googling to find out.**
+
+* Europe: ISO 8859-(1, 2, 3, 4, 10, 15, 16)
+* Asia: ISO 8859-11 (Thai), Windows-1258 (Vietnamese), JIS X 02 08 (Japanese), GB 2312 (Chinese), KS X 1001 (Korean)
+
+**7.	Generate the correct format string to parse each of the following dates and times:**
+
+`d1 <- "January 1, 2010"`  
+`parse_date(d1, "%B %d, %Y")`  
+
+`d2 <- "2015-Mar-07"`  
+`parse_date(d2, "%Y-%b-%d")`  
+
+`d3 <- "06-Jun-2017"`  
+`parse_date(d3, "%d-%b-%Y")`  
+
+`d4 <- c("August 19 (2015)", "July 1 (2015)")`  
+`parse_date(d4, "%B %d (%Y)")`  
+
+`d5 <- "12/30/14" # Dec 30, 2014`  
+`parse_date(d5, "%m/%d/%y")`  
+
+`t1 <- "1705"`  
+`parse_time(d6, "%H%M")`
+
+`t2 <- "11:15:10.12 PM"`  
+`parse_time(t2, "%I:%M:%S %p") `  
+
+(This worked, but I couldn't get the .12 seconds to work by any different way. Not sure why ignoring it was the answer)
+
