@@ -13,10 +13,12 @@ output: html_document
 
 **2. Compare and contrast the following operations on a `data.frame` and equivalent tibble. What is different? Why might the default data frame behaviours cause you frustration?**
 
-`df <- data.frame(abc = 1, xyz = "a")`   
-`df$x`  
-`df[, "xyz"]`    
-`df[, c("abc", "xyz")]`
+```{r eval = FALSE}
+df <- data.frame(abc = 1, xyz = "a")   
+df$x
+df[, "xyz"]
+df[, c("abc", "xyz")]
+```
 
 Tibbles don't do partial matching for column extraction, while data frames do. So for `df$x`, the data set returns column "xyz", while the tibble returns an error. Partial matching may cause errors in analysis if there are similarly named columns, or you pull in something that you think is something else due to a typo. Additionally, the `df[, "xyz"]` using the data frame returns the different levels of the factor, not the column itself. So that's not helpful if you're trying to specifically see the full data.
 

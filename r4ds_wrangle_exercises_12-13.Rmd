@@ -1,0 +1,413 @@
+---
+title: "r4ds_wrangle_exercises_12-13"
+author: "Jessica Maldonado"
+date: "October 6, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(nycflights13)
+library(fueleconomy)
+```
+
+
+
+##12.2.1
+
+**1.	Using prose, describe how the variables and observations are organised in each of the sample tables.**   
+
+* Table1: Each variable has its own column, and each observation is in its own row.  
+* Table 2: Country and year are in their own columns, but instead of having columns with counts of cases and population, each row has a count "type" and a count.   
+* Table 3: Instead of having separate count columns, the rate column represents both case counts and population counts without labels or a calculation.  
+* Table 4a: This tibble has a row for each country, with columns representing cases by year.  
+* Table 4b: This is the same as 4a except with population counts by year in the columns instead of cases by year .  
+
+**2.	Compute the rate for table2, and table4a + table4b. You will need to perform four operations:**  
+
+1.	Extract the number of TB cases per country per year.  
+2.	Extract the matching population per country per year.  
+3.	Divide cases by population, and multiply by 10000.  
+4.	Store back in the appropriate place.  
+
+**Which representation is easiest to work with? Which is hardest? Why?**   
+
+To be honest, I'm totally unsure of how to do either of these things with these tables using R. Conceptually, 4a and 4b would be easier in a SQL setting since you can join on country and year, while you'd have to do some sort of if/case statement in SQL to parse out the cases and population into separate columns. Combining 4a and 4b is closer to a tidy data set from my best guess.   
+
+**3.	Recreate the plot showing change in cases over time using table2 instead of table1. What do you need to do first?**
+  	
+```{r eval = FALSE}
+table2 %>%
+  filter(type == "cases") %>%
+  ggplot(aes(year, count)) + 
+  geom_line(aes(group = country), colour = "grey50") + 
+  geom_point(aes(colour = country))
+```
+
+You have to filter type to "cases" and change "cases" to "count" to get the same results.  
+
+
+##12.3.3
+
+**1.	Why are gather() and spread() not perfectly symmetrical?**  
+*Carefully consider the following example:*
+```{r eval = FALSE} 
+stocks <- tibble(
+  year   = c(2015, 2015, 2016, 2016),
+  half  = c(   1,    2,     1,    2),
+  return = c(1.88, 0.59, 0.92, 0.17)
+)
+stocks %>% 
+  spread(year, return) %>% 
+  gather("year", "return", `2015`:`2016`)
+```
+*(Hint: look at the variable types and think about column names.)*  
+
+For spread, you just need to use the column names for R to understand what to do. To use gather, you have to use the current column names in addition to the values you're using as names for the new columns.  
+
+**Both spread() and gather() have a convert argument. What does it do?** 
+
+It converts data types, which is useful if the original column had a combination of data types that were forced into strings, and the new columns will have only one data type.  
+
+**2.	Why does this code fail?**  
+
+```{r eval = FALSE}
+table4a %>% 
+  gather(1999, 2000, key = "year", value = "cases")
+#> Error in combine_vars(vars, ind_list): Position must be between 0 and n
+```
+
+There's no backtick around the years.  
+
+**3.	Why does spreading this tibble fail? How could you add a new column to fix the problem?**  
+```{r eval = FALSE}
+people <- tribble(
+  ~name,             ~key,    ~value,
+  #-----------------|--------|------
+  "Phillip Woods",   "age",       45,
+  "Phillip Woods",   "height",   186,
+  "Phillip Woods",   "age",       50,
+  "Jessica Cordero", "age",       37,
+  "Jessica Cordero", "height",   156
+)
+```
+
+There are 2 age values for Phillip Woods and only one height value. Since it wants to create a row with unique values based on name and these variables, that isn't possible with two age values. Adding another column with a unique value would solve for that. I added "year" as a 4th column to determine the year that age and height was collected, and I was able to successfully spread the tribble.
+
+```{r}
+people <- tribble(
+  ~name,             ~key,    ~value, ~year,
+  #-----------------|--------|------|-----
+  "Phillip Woods",   "age",       45, 1995,
+  "Phillip Woods",   "height",   186, 1995,
+  "Phillip Woods",   "age",       50, 2000,
+  "Jessica Cordero", "age",       37, 2000,
+  "Jessica Cordero", "height",   156, 2000
+)
+
+spread(people, key = key, value = value)
+```
+
+**4.	Tidy the simple tibble below. Do you need to spread or gather it? What are the variables?**
+
+```{r}
+preg <- tribble(
+  ~pregnant, ~male, ~female,
+  "yes",     NA,    10,
+  "no",      20,    12
+) 
+```
+
+I found that doing a gather to get a "gender" column and then spread to have the "yes" and "no" variables as columns with a count was the best option. 
+
+```{r}
+preg %>%
+gather("male", "female", key = "gender", value = "number") %>% 
+  spread(key = "pregnant", value = "number")
+```
+
+##12.4.3
+**1.	What do the extra and fill arguments do in separate()? Experiment with the various options for the following two toy datasets.**
+```{r eval = FALSE}
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+  separate(x, c("one", "two", "three"))
+```
+
+In this example, the middle grouping has 4 characters instead of 3. R doesn't like that because you're creating 3 columns. Extra allows you to say what you want  R to do. The default is warn (it drops but warns you), but you can also drop without warning or merge so you get the f,g in one cell.
+
+```{r eval = FALSE}
+tibble(x = c("a,b,c", "d,e", "f,g,i")) %>% 
+  separate(x, c("one", "two", "three"))
+```
+
+In this case, there are too few characters in the second character grouping to have a value in each column. By default, you are warned, but you can use fill to tell R where the NA should go in the column - on the left or the right. 
+
+**2.	Both unite() and separate() have a remove argument. What does it do? Why would you set it to FALSE?**  
+
+It removes the original column from the output, so you don't have the original columns that you altered. If you don't want that original data, you would want to remove it.  
+
+**3.	Compare and contrast separate() and extract(). Why are there three variations of separation (by position, by separator, and with groups), but only one unite?**
+
+* Extract() is very similar to separate(), but it uses regex instead of one of the simpler options in separate(). It would be used for data where one of the three separate variations wouldn't pull out the intended data accurately. 
+* There can be a variety of ways that data needs to be separated, but you really only have one option of how to unite them, and the only potential factor that would be different across data sources would be the separating character.
+
+##12.5.1
+**1.	Compare and contrast the fill arguments to spread() and complete().**  
+
+As far as what they accomplish, it's all very different things. Spread isn't related to missing data and transforms data across multiple rows into cleaner data with each unique row identifier as a column with its corresponding value. Complete does deal with missing values, but it just identifies any place where a missing value could exist and fill those in, while fill will fill in missing data with existing data from the last observation completed.  
+
+**2.	What does the direction argument to fill() do?**  
+
+It tells R which direction to fill the data in - down is the default, but you can also fill up.  
+
+##12.6.1
+
+**1.	In this case study I set na.rm = TRUE just to make it easier to check that we had the correct values. Is this reasonable? Think about how missing values are represented in this dataset. Are there implicit missing values? What's the difference between an NA and zero?**  
+
+No, in this instance NAs should have been replaced with 0s. Knowing that 0 cases of a certain type in a certain year in a certain country is still valuable information. Some cells did have 0 when there were 0 cases, and some had NA instead, making it seem that maybe countries where there were NAs weren't evaluated or something like that.  
+
+**2.	What happens if you neglect the mutate() step? (mutate(key = stringr::str_replace(key, "newrel", "new_rel")))**
+
+You get a ton of missing value warnings. We split out "new_rel" on the underscore, so the data without the underscore only had two strings instead of 3, causing a bunch of NA data where "new_rel" couldn't be split appropriately.  
+
+**3.	I claimed that iso2 and iso3 were redundant with country. Confirm this claim.** 
+Both sets of code below produce the same number of rows, which they wouldn't have if there were different iso2 or iso3 values across the same country.  
+```{r}
+who %>%
+  group_by(country, iso2, iso3) %>%
+  count()
+
+who %>%
+  unite(combine, country, iso2, iso3) %>%
+  group_by(combine) %>%
+  count()
+```
+
+**4.	For each country, year, and sex compute the total number of cases of TB. Make an informative visualisation of the data.**
+
+
+```{r}
+who %>%
+  gather(code, value, new_sp_m014:newrel_f65, na.rm = TRUE) %>% 
+  mutate(code = stringr::str_replace(code, "newrel", "new_rel")) %>%
+  separate(code, c("new", "var", "sexage")) %>% 
+  select(-new, -iso2, -iso3) %>% 
+  separate(sexage, c("sex", "age"), sep = 1) %>%
+  group_by(country, year, sex) %>%
+  tally(value) %>% 
+  ggplot(mapping = aes(x = year, y = n)) +
+  geom_col(aes(fill = sex)) +
+  coord_cartesian(xlim = c(1995,2013))
+```
+
+## 13.2.1  
+
+**1.	Imagine you wanted to draw (approximately) the route each plane flies from its origin to its destination. What variables would you need? What tables would you need to combine?**
+
+We would need the latitude and longitude of both the destination and origin, and the tailnum to determine specific planes. We would have to combine flights with airports.  
+
+**2.	I forgot to draw the relationship between weather and airports. What is the relationship and how should it appear in the diagram?**  
+
+The relationship is origin. It should go directly from airports.origin > weather.origin.  
+
+**3.	weather only contains information for the origin (NYC) airports. If it contained weather records for all airports in the USA, what additional relation would it define with flights?**  
+
+It would also relate to destination in the flights table, and you would assume that the day/hour data tied to the destination airports would tie to the arrival time instead of the departure time for the origins.  
+
+**4.	We know that some days of the year are "special", and fewer people than usual fly on them. How might you represent that data as a data frame? What would be the primary keys of that table? How would it connect to the existing tables?**  
+
+You would want the keys to be year, month, day, origin, and maybe dest, depending on the goals. If the data frame has aggregate data about # of flights per day by origin/dest combo, you could join back to flights on the key combination to get all the specific flights with fewer than X flights on a given day.  
+
+##13.3.1
+**1.	Add a surrogate key to flights.**
+
+```{r}
+flights %>%  
+  mutate(surrogatekey = row_number())
+```
+
+**2.	Identify the keys in the following datasets**  
+*(You might need to install some packages and read some documentation.)*   
+
+* Lahman::Batting >> playerID, yearID, teamID, stint  
+* babynames::babynames >> year, sex, name  
+* nasaweather::atmos >> lat, long, year, month  
+* fueleconomy::vehicles >> ID  
+* ggplot2::diamonds >> this table needs a surrogate key because each row is an observation of a different diamond and is not tied to any specific ID.  
+
+**3.	Draw a diagram illustrating the connections between the Batting, Master, and Salaries tables in the Lahman package. Draw another diagram that shows the relationship between Master, Managers, AwardsManagers.**
+
+* Batting > Master on playerID.  
+* Batting > Salaries on playerID, yearID, teamID, lgID
+* Master > Salaries on playerID  
+  
+* Master > Managers on playerID  
+* Master > AwardsManagers on playerID
+* Managers > AwardsManagers on playerID, yearID, lgID  
+
+**How would you characterise the relationship between the Batting, Pitching, and Fieldingtables?**  
+
+They are all related by playerID, yearID, teamID, lgID, and stint to describe how a player in a certain year/team/etc performed in the three different types of baseball play.
+
+##13.4.6  
+**1.	Compute the average delay by destination, then join on the airports data frame so you can show the spatial distribution of delays. Here's an easy way to draw a map of the United States:** 
+```{r eval = FALSE}
+airports %>%
+  semi_join(flights, c("faa" = "dest")) %>%
+  ggplot(aes(lon, lat)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap()
+``` 
+
+*(Don't worry if you don't understand what semi_join() does - you'll learn about it next.)  
+You might want to use the size or colour of the points to display the average delay for each airport.*
+
+```{r}
+flights %>%
+  filter(dep_delay >= 0)%>% 
+  group_by(dest) %>%
+  summarize(avg_delay = mean(dep_delay)) %>%
+  left_join(airports, c("dest" = "faa")) %>%
+  filter(lon > -130) %>%
+  ggplot(aes(lon, lat)) +
+  borders("state") +
+  geom_point(aes(color = avg_delay)) +
+  coord_quickmap()
+``` 
+
+**2.	Add the location of the origin and destination (i.e. the lat and lon) to flights.**
+```{r}
+flights %>%
+  left_join(airports, c("origin" = "faa")) %>%
+  left_join(airports, c("dest" = "faa")) %>% 
+  select(year, month, day, tailnum, origin, lat.x, lon.x, dest, lat.y, lon.y)
+```  
+
+**3.	Is there a relationship between the age of a plane and its delays?**  
+I would say there's a weak positive relationship between the age of plane and delays. There's a higher concentration of higher average delays when the plane is older, but it doesn't seem significant at first glance.  
+
+```{r}
+flights %>%
+  left_join(planes, by = "tailnum") %>%
+  mutate(age = year.x - year.y) %>%
+  filter(dep_delay >= 0, !is.na(age)) %>%
+  group_by(tailnum, age) %>%
+  summarize(mean =  mean(dep_delay)) %>%
+  filter(mean < 100) %>%
+  ggplot(aes(x = age,  y = mean)) +
+  geom_point(alpha = 1/5)
+```
+
+**4.	What weather conditions make it more likely to see a delay?**  
+Individually, none of the conditions had a clear directional correlation with average delay, but overall humidity and pressure seemed to have the most visible relationship.   
+
+```{r}
+flights %>%
+  left_join(weather, c("year", "month", "day", "origin", "hour", "time_hour")) %>%
+  group_by(temp, dewp, humid, wind_dir, wind_speed, wind_gust, precip, pressure, visib) %>%
+  filter(dep_delay > 0, !is.na(dep_delay), wind_speed < 100) %>%
+  summarize(avg_delay = mean(dep_delay, na.rm = TRUE)) %>%
+  filter(avg_delay < 200) %>%
+  ggplot(aes(humid, avg_delay)) +
+  geom_point(alpha = 1/5)
+
+flights %>%
+  left_join(weather, c("year", "month", "day", "origin", "hour", "time_hour")) %>%
+  group_by(temp, dewp, humid, wind_dir, wind_speed, wind_gust, precip, pressure, visib) %>%
+  filter(dep_delay > 0, !is.na(dep_delay), wind_speed < 100) %>%
+  summarize(avg_delay = mean(dep_delay, na.rm = TRUE)) %>%
+  filter(avg_delay < 200) %>%
+  ggplot(aes(pressure, avg_delay)) +
+  geom_point(alpha = 1/5)
+```
+
+**5.	What happened on June 13 2013? Display the spatial pattern of delays, and then use Google to cross-reference with the weather.**  
+
+There were two big sets of storms that affected the mid-Atlantic and some of the eastern Midwest. By comparing to a few other days around that specific day, you can see that the size range of average delays is much higher on the 13th, from 50-150 compared to 20-80 on a day later that week. You can also see by the size that the majority of airports in the affected area had very long delays on average.
+
+```{r}
+flights %>%
+  left_join(airports, c("dest" = "faa")) %>%
+  filter(month == 6, day == 13, dep_delay >- 0, !is.na(dep_delay), lon > -130) %>%
+  group_by(dest, lat, lon) %>%
+  summarize(avg_delay = mean(dep_delay)) %>%
+  ggplot(mapping= aes(x = lon, y = lat)) +
+  borders("state") +
+  geom_point(aes(size = avg_delay)) +
+  coord_quickmap()
+```
+
+##13.5.1  
+**1.	What does it mean for a flight to have a missing tailnum? What do the tail numbers that don't have a matching record in planes have in common? (Hint: one variable explains ~90% of the problems.)**  
+* If there's no tailnum in flights, the flight was cancelled. If you do filter ```(is.na(tailnum), !is.na(dep_time))``` there are no rows.  
+* About 90% of the flights with tailnums that don't match are either American Airlines (AA) or Envoy Air (MQ).
+
+```{r}
+flights %>%
+  anti_join(planes, by = "tailnum") %>% 
+  group_by(carrier) %>%
+  count() %>%
+  arrange(desc(n))
+```
+
+**2.	Filter flights to only show flights with planes that have flown at least 100 flights.**  
+
+```{r}
+flights100 <- flights %>%
+  group_by(tailnum) %>%
+  count() %>%
+  filter(n >= 100)
+
+flights %>%
+  semi_join(flights100, by = "tailnum")
+```
+
+**3.	Combine fueleconomy::vehicles and fueleconomy::common to find only the records for the most common models.**  
+```{r}
+vehicles %>% 
+  semi_join(common, by = "model")
+```
+
+**4.	Find the 48 hours (over the course of the whole year) that have the worst delays. Cross-reference it with the weather data. Can you see any patterns?** 
+
+The main pattern I saw was high humidity with little to no precipitation across both days, with different temperatures, dewpoints, and wind speeds.
+
+```{r}
+flights2 <- flights %>%
+  group_by(year, month, day) %>%
+  filter(dep_delay > 0, !is.na(dep_delay)) %>%
+  summarize(avg_delay = mean(dep_delay)) %>%
+  arrange(desc(avg_delay), month, day) %>%
+  head(2)
+
+weather %>%
+  semi_join(flights2, by = c("month", "day")) %>%
+  arrange(month, day, hour)
+```
+**5.	What does anti_join(flights, airports, by = c("dest" = "faa")) tell you? What does anti_join(airports, flights, by = c("faa" = "dest")) tell you?**  
+
+1. It gives you the list of flights with a destination that doesn't have an airport code existing in airports.  
+2. It gives you the list if airports that don't have a recorded flight going there as a destination in flights.  
+
+**6.	You might expect that there's an implicit relationship between plane and airline, because each plane is flown by a single airline. Confirm or reject this hypothesis using the tools you've learned above.**  
+
+The vast majority of planes are flown by one airline, but there are some exceptions.  
+
+I took the following approach:  
+* Inner join flights with planes to make sure we're only looking at flights with a tailnum we can identify.  
+* Group by tailnum and carrier so that I could count the number of observations by unique combination of the two, and put that into its own object.  
+* Since tailnum2 has one row for each unique combination of carrier and tailnum, I wanted to see how many tailnums had > 1 carrier.  
+
+```{r}
+tailnum2 <- planes %>%
+  inner_join(flights, by = "tailnum") %>%
+  group_by(tailnum, carrier) %>%
+  count()
+
+tailnum2 %>%
+  group_by(tailnum) %>%
+  count() %>%
+  filter(nn > 1)
+```
