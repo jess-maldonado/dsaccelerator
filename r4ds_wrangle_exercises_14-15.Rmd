@@ -1,0 +1,358 @@
+---
+title: "r4ds_wrangle_exercises_14-15"
+author: "Jessica Maldonado"
+date: "October 9, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(stringr)
+library(forcats)
+library(ggplot2)
+```
+
+##14.2.5  
+
+**1. In code that doesn't use stringr, you'll often see paste() and paste0(). What's the difference between the two functions? What stringr function are they equivalent to? How do the functions differ in their handling of NA?**  
+
+* paste0() is the paste() function with a default separater of "" or no spaces.  
+* They are equivalent to str_c.  
+* paste() will force NAs to actual "NA" as a string, while str_c will ignore the NA unless told not to.  
+
+**2. In your own words, describe the difference between the sep and collapse arguments to str_c().**  
+
+They both serve the same purpose, but sep is used for separate strings `(i.e. str_c("a", "b", "c", sep = ","))` while collapse is used on character vectors `(i.e. str_c(c("a","b","c"), collapse = ","))`.
+
+**3. Use str_length() and str_sub() to extract the middle character from a string. What will you do if the string has an even number of characters?**  
+
+This is giving the middle "p" in "apple"
+``` {r}
+string <- "apple"
+length <- str_length(string)
+str_sub(string, length/2, length/2)
+
+```
+  
+This is giving the middle "na" in "banana"
+``` {r}
+string <- "banana"
+length <- str_length(string)
+str_sub(string, length/2, length/2 +1)
+
+```
+
+**4. What does str_wrap() do? When might you want to use it?**  
+
+It will wrap the string based on the number of characters you set. If the next full word will go past the character limit on a line, it will be moved to the next line. You might want to use it if you have a character limit width where you're printing or otherwise want to format a specific way.  
+
+**5. What does str_trim() do? What's the opposite of str_trim()?**  
+
+str_trim() will trim white space on either side (or both sides) of a string. str_pad() is the opposite and will add white space.
+
+**6. Write a function that turns (e.g.) a vector c("a", "b", "c") into the string a, b, and c. Think carefully about what it should do if given a vector of length 0, 1, or 2.**  
+
+```{r}
+abc <- c("a", "b", "c")  
+abc2 <- str_c(abc, collapse = ", ")  
+str_c(str_sub(abc2,1,str_length(abc2)-1),"and ",str_sub(abc2,str_length(abc2),str_length(abc2)))
+```
+
+If a vector length of 1, I wouldn't want to use collapse = "," because there shouldn't be any commas in "a and b", but I'm unsure right now how I could accomplish that while also including the grammatical rules of a list of 3. With a vector length of 0, it would just be "a", so I wouldn't need any of the str_c functions to turn the vector into the string "a".
+
+##14.3.1.1  
+
+**1. Explain why each of these strings don't match a \: "\", "\\", "\\\". **  
+* The first one would be considered an escape character and wouldn't register as any character.  
+* The second is how you would write \ to show up as a "\" but won't match it with regex.  
+* This expression has the \ to escape the "\\" that will show up as "\", but doesn't have the 4th \ to actually represent "\" i nregex.
+
+**2. How would you match the sequence ```"'\```?**  
+
+```{r}
+abc <- "\"\'\\"
+str_view(abc, "\"\'\\\\")
+```
+
+**3. What patterns will the regular expression \..\..\.. match? How would you represent it as a string?**  
+
+* This will match the pattern .a.b.c or otherwise characters between periods.  
+* As a string, you have to escape the backslashes, so "\\..\\..\\.."  
+
+```{r}
+x <- c(".a.b.c", ".d.e.f.", "1.2.3")
+str_view(x, "\\..\\..\\..")
+```
+
+
+##14.3.2.1  
+
+**1. How would you match the literal string "\$^\$"?**  
+```{r}
+y <- c("$^$", "&&^")
+str_view(y, "\\$\\^\\$")
+```
+
+**2. Given the corpus of common words in stringr::words, create regular expressions that find all words that:**  
+*Since this list is long, you might want to use the match argument to str_view() to show only the matching or non-matching words.*  
+**1. Start with "y".**  
+```{r}
+str_view(words, "^y", match = TRUE)
+```
+
+**2. End with "x"**  
+```{r}
+str_view(words, "x%", match = TRUE)
+```
+**3. Are exactly three letters long. (Don't cheat by using str_length()!)**  
+
+```{r}
+str_view(words, "\\b...\\b", match = TRUE)  
+```
+**4. Have seven letters or more.**  
+```{r}
+str_view(words, "\\b.......", match = TRUE)
+```
+
+
+
+
+##14.3.3.1  
+
+**1. Create regular expressions to find all words that:**  
+
+**Start with a vowel.**  
+```{r}
+str_view(words, "^[aeiou]", match = TRUE)
+```
+
+**That only contain consonants. (Hint: thinking about matching "not"-vowels.)**  
+This uses "+" which is outside the scope of this chapter, but I wasn't able to figure out a way to do this only with what was in the section, so I discovered that "+" will take the rule you've set it and run it as many times as possible. In this case, it's running the [^aeiou] for every letter within the boundary of each word.  
+```{r}
+str_view(words, "\\b[^aeiou]+\\b", match = TRUE)
+```
+
+**End with ed, but not with eed.**  
+```{r}
+str_view(words, "[^e][e][d]$", match = TRUE)
+```
+**End with ing or ise.**  
+```{r}
+str_view(words, "ise|ing$", match = TRUE)
+```
+
+**2. Empirically verify the rule "i before e except after c".**  
+It is in fact not true, as we see that "science", and "society" have "ie" after "c", and "weigh" and "eight" have "ei" not after a "c".  
+```{r}
+str_view(words, "ie|cei|ei", match = TRUE)
+```
+
+**3. Is "q" always followed by a "u"?**  
+For all of the words in stringr::words, yes.
+```{r}
+str_view(words, "q.", match = TRUE)
+```
+
+**4. Write a regular expression that matches a word if it's probably written in British English, not American English.**  
+A lot of American English spellings will get caught in here as well, but I think I got the majority of the different spellings. I pulled out letters before "our" that are common words with that pattern.
+```{r}
+str_view(words, "[^hyscf]our|[^aeiou]re$|ise$|yse$", match = TRUE)
+```
+
+**5. Create a regular expression that will match telephone numbers as commonly written in your country.**  
+```{r}
+num <- c("919-623-5115", "19-32-3411")
+str_view(num, "\\d\\d\\d-\\d\\d\\d-\\d\\d\\d\\d")
+```
+
+##14.4.2  
+
+**1. For each of the following challenges, try solving it by using both a single regular expression, and a combination of multiple str_detect() calls.**  
+
+**Find all words that start or end with x.**  
+```{r}
+str_view(words, "^x|x$", match = TRUE)  
+
+xstart <- words[str_detect(words, "^x")]  
+xend <- words[str_detect(words, "x$")]  
+c(xstart, xend)
+```
+
+**Find all words that start with a vowel and end with a consonant.**  
+```{r}
+str_view(words, "^[aeiou].+[^aeiou]$", match = TRUE)  
+
+vowel <- words[str_detect(words, "^[aeiou]")]  
+cons <- words[str_detect(words, "[^aeiou]$")]  
+intersect(vowel, cons)
+```  
+**Are there any words that contain at least one of each different vowel?**  
+Nope. I had to do research on lookarounds, since that seems to be the only way to do this in one string. I verified the work by seeing valid results when looking for the combination of "aei" and "aeio".  
+```{r}
+str_view(words, "(?=.*a)(?=.*e)(?=.*i)(?=.*o)(?=.*u)", match = TRUE)  
+
+a <- words[str_detect(words, "a+")]  
+e <- words[str_detect(words, "e+")]  
+i <- words[str_detect(words, "i+")]  
+o <- words[str_detect(words, "o+")]  
+u <- words[str_detect(words, "u+")]  
+Reduce(intersect, list(a,e,i,o,u))
+```
+
+**2. What word has the highest number of vowels? What word has the highest proportion of vowels? (Hint: what is the denominator?)**  
+"Appropriate" along with 7 other words has the highest number of vowels. "A" has the highest proportion of vowels, obviously. The second most (with any letters aside from vowels) is "area". At least in this list. "Queue" is 80% vowels, it's just not in this list.  
+```{r}
+df <- tibble(  
+  word = words,  
+  i = seq_along(word))  
+
+df2 <- df %>%  
+  group_by(word) %>%  
+  mutate(length = str_length(word), vowels = str_count(word, "[aeiou]"), prop = vowels/length)  
+
+df2 %>%  
+  arrange(desc(vowels))  
+
+df2 %>%  
+  arrange(desc(prop))
+```
+
+##14.4.6.1  
+
+**1. Split up a string like "apples, pears, and bananas" into individual components.**  
+```{r}
+fruit <- "apples, pears, and bananas"
+str_split(fruit, boundary("word"))
+```  
+**2. Why is it better to split up by boundary("word") than ""?**  
+Using "word" will take care of the punctuation. For question 1, there wouldn't be an easy way to get the same result because of the commas.  
+
+**3. What does splitting with an empty string ("") do? Experiment, and then read the documentation.**  
+You get every single letter or element split into its own string.  It's a shortcut for boundary("character").  
+```{r}
+fruit %>% str_split("")
+```
+##15.4.1  
+
+**1. There are some suspiciously high numbers in tvhours. Is the mean a good summary?**   
+
+No it's not. When you look at records with tvhour not NA, there's ~11k records. Depending on what your cutoff for "suspisciously high" is, there are betwen 200 and 400 records that are suspiciously high. When you pull those out the overall distribution of means doesn't change too dramatically, but it's definitely lower overall than when you include the high records. The median would be a better summary to use.  
+
+**2. For each factor in gss_cat identify whether the order of the levels is arbitrary or principled.**  
+
+* marital > Artibrary
+* race > Artibrary
+* rincome > Principled
+* partyid > The way it's arranged (with a spectrum of independent, leaning towards X, strong X, not strong X) I would consider principled given that there's a clear order that you would want to look at the factors when looking for patterns.
+* relig > Arbitrary
+* denom > Arbitrary
+
+
+**3. Why did moving "Not applicable" to the front of the levels move it to the bottom of the plot?**  
+
+The values are on the y axis, and 0 is the start of the y axis(and therefore the "beginning") of the axis. If you reordered it on the x axis, it would also be closest to 0.
+
+##15.5.1  
+
+**1. How have the proportions of people identifying as Democrat, Republican, and Independent changed over time?** 
+There hasn't been a huge fluctuation in proportion, although there are slightly higher levels of independents. However, when you look at the counts by year, there are overall huge spikes in numbers for each party, assuming that people are registering to vote more often (or answering the survey more often) during election years.  
+```{r}
+gss_cat %>%
+  mutate(partyid = fct_collapse(partyid, other = c("No answer", "Don't know", "Other party"),
+         rep = c("Strong republican", "Not str republican"),
+          ind = c("Ind,near rep", "Ind,near dem", "Independent"),
+          dem = c("Not str democrat", "Strong democrat"))) %>%
+  group_by(year) %>% 
+  count(partyid) %>%
+  mutate(prop = n / sum(n)) %>%
+  ggplot(aes(year, prop)) +
+  geom_col(aes(fill = partyid))
+
+gss_cat %>%
+  mutate(partyid = fct_collapse(partyid, other = c("No answer", "Don't know", "Other party"),
+         rep = c("Strong republican", "Not str republican"),
+          ind = c("Ind,near rep", "Ind,near dem", "Independent"),
+          dem = c("Not str democrat", "Strong democrat"))) %>%
+  group_by(year) %>% 
+  count(partyid) %>%
+  ggplot(aes(year, n)) +
+  geom_col(aes(fill = partyid))
+
+```  
+
+**2. How could you collapse rincome into a small set of categories?**  
+Since there are so many levels I would want to use fct_lump.  
+```{r}
+gss_cat %>%
+  mutate(rincome2 = fct_lump(rincome, n = 5), n = n()) %>%
+  group_by(rincome2) %>%
+  ggplot(aes(rincome2,n)) +
+  geom_col() +
+  coord_flip()
+```
+
+##14.3.4.1 Exercises  
+*I really enjoyed the regexp exercises, so I put my work down here as a record.*  
+
+**1. Describe the equivalents of `?`, `+`, `*` in `{m,n}` form.**  
+* `?` = `{0,1}`  
+* `+` = `{1,infinity}`  
+* `*` = `{0,infinity}`  
+
+**2. Describe in words what these regular expressions match: (read carefully to see if I'm using a regular expression or a string that defines a regular expression.)**  
+
+1. `^.*$`  
+This matches any length word.  
+2. `"\\{.+\\}"`  
+This matches any length word within curly brackets.  
+3. `\d{4}-\d{2}-\d{2}`  
+This matches a string of numbers with 4 numbers - 2 numbers - 2 numbers, like 1342-52-31  
+4. `"\\\\{4}"`  
+This matches an actual string of 4 backslashes "\\\\\\\\"   
+
+**3. Create regular expressions to find all words that:**  
+
+**Start with three consonants.**   
+```{r}
+str_view(words, "^[^aeiou]{3}", match = TRUE)
+```
+**Have three or more vowels in a row.**  
+```{r}
+str_view(words, "[aeiou]{3,}", match = TRUE)
+```
+**Have two or more vowel-consonant pairs in a row.**  
+```{r}
+str_view(words,"([aeiou][^aeiou]){2}", match = TRUE)
+```
+
+
+##14.3.5.1  
+
+
+**1. Describe, in words, what these expressions will match:**  
+
+a. `"(.)\1\1"`  
+This represents three of the same letters in a row.  
+b. `"(.)(.)\\2\\1"`    
+This represents a pattern of "abba" like "noon".    
+c. `"(..)\1"`    
+This represents the same two letters repeating right after another like "papaya". 
+d. `"(.).\\1.\\1"`    
+This represents the same letter being repeated every other letter like "eleven".  
+e. `"(.)(.)(.).*\\3\\2\\1"`  
+This represents a palindrome like "racecar" where three letters repeat in reverse order around another undefined letter.
+
+**2. Construct regular expressions to match words that:** 
+
+**Start and end with the same character.**  
+```{r}
+str_view(words, "^(.).+\\1$", match = TRUE)
+```
+**Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.)**  
+```{r}
+str_view(words, "(..).+\\1", match = TRUE)
+```
+**Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)**  
+```{r}
+str_view(words, "(.).+\\1.+\\1", match = TRUE)
