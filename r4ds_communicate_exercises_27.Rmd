@@ -22,12 +22,12 @@ The main differences are the formatting. HTML is very basic with the markdown sh
 
 We went over this in the breakout session, but on Windows you do have to download LaTeX and that's a no go without a trip to IT. So I'll make sure to do so sometime this week!  
 
-##27.3.1  
+## 27.3.1  
 
 **1. Practice what you've learned by creating a brief CV. The title should be your name, and you should include headings for (at least) education or employment. Each of the sections should include a bulleted list of jobs/degrees. Highlight the year in bold.**
 
 
-##Jessica Maldonado  
+## Jessica Maldonado  
 
 ### Education  
 * B.A. in Psychology at UNC Chapel Hill, **2015**  
@@ -35,12 +35,12 @@ We went over this in the breakout session, but on Windows you do have to downloa
 
 ### Work Experience  
 **Red Ventures**  
-*Analytics Team*, **Sept 2017 - Present** 
-* Tableau and whatnot.
-*Global CE Team*, **Feb 2017 - Sept 2017**  
-* Attribution queries.
-*CE Associate*, **July 2015 - Feb 2017**  
-* Lots of testing.
+*Analytics Team*, **Sept 2017 - Present**  
+* Tableau and whatnot.  
+*Global CE Team*, **Feb 2017 - Sept 2017**    
+* Attribution queries.  
+*CE Associate*, **July 2015 - Feb 2017**    
+* Lots of testing.  
 
 
 **2. Using the R Markdown quick reference, figure out how to:**  
