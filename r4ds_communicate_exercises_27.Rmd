@@ -1,0 +1,149 @@
+---
+title: "r4ds_communicate_exercises_27"
+output: html_notebook
+---
+
+## 27.2.1  
+
+**1. Create a new notebook using File > New File > R Notebook. Read the instructions. Practice running the chunks. Verify that you can modify the code, re-run it, and see modified output.**  
+
+Got it!
+
+**1. Create a new R Markdown document with File > New File > R Markdown. Knit it by clicking the appropriate button. Knit it by using the appropriate keyboard short cut. Verify that you can modify the input and see the output update.**  
+Got it!
+
+**1. Compare and contrast the R notebook and R markdown files you created above. How are the outputs similar? How are they different? How are the inputs similar? How are they different? What happens if you copy the YAML header from one to the other?**  
+
+The biggest difference I noticed is that for R Notebooks, the output doesn't show by default while it will show both the code and the output by default in a MD file. Additionally, there are additional things in the YAML header that you're prompted for the MD (like date, Author) that you aren't for the R Notebook. If you copy the YAML header, you will change the format of the output. Copying a Notebook header to a doc started as MD will make it so that the output doesn't show the output automatically.  
+
+**1. Create one new R Markdown document for each of the three built-in formats: HTML, PDF and Word. Knit each of the three documents. How does the output differ? How does the input differ? (You may need to install LaTeX in order to build the PDF output - RStudio will prompt you if this is necessary.)**
+
+The main differences are the formatting. HTML is very basic with the markdown showing as black and bold, and the code snippets looking more computer-like (I don't really know how to describe it). In Word, the document is formatted like a nice word doc (obviously), with links in blue, and all of the headers in different shades of blue as well. The output is a grey background and less "computer looking" compared to the HTML formatting.  
+
+We went over this in the breakout session, but on Windows you do have to download LaTeX and that's a no go without a trip to IT. So I'll make sure to do so sometime this week!  
+
+##27.3.1  
+
+**1. Practice what you've learned by creating a brief CV. The title should be your name, and you should include headings for (at least) education or employment. Each of the sections should include a bulleted list of jobs/degrees. Highlight the year in bold.**
+
+
+##Jessica Maldonado  
+
+### Education  
+* B.A. in Psychology at UNC Chapel Hill, **2015**  
++ *Second major in Hispanic Linguistics*  
+
+### Work Experience  
+**Red Ventures**  
+*Analytics Team*, **Sept 2017 - Present** 
+* Tableau and whatnot.
+*Global CE Team*, **Feb 2017 - Sept 2017**  
+* Attribution queries.
+*CE Associate*, **July 2015 - Feb 2017**  
+* Lots of testing.
+
+
+**2. Using the R Markdown quick reference, figure out how to:**  
+
+1. Add a footnote.  
+You can add a footnote^1^ reference by putting in the number between "^"  
+1. Add a horizontal rule.  
+Use "***"
+1. Add a block quote.    
+Use ">" for starting a block quote.
+
+**3. Copy and paste the contents of diamond-sizes.Rmd from https://github.com/hadley/r4ds/tree/master/rmarkdown in to a local R markdown document. Check that you can run it, then add text after the frequency polygon that describes its most striking features.**  
+Below is the content of the Rmd file (used for all further questions as well):  
+```{r, include = TRUE}
+library(ggplot2)
+library(dplyr)
+
+smaller <- diamonds %>% 
+  filter(carat <= 2.5)
+```
+
+We have data about `r nrow(diamonds)` diamonds. Only 
+`r nrow(diamonds) - nrow(smaller)` are larger than
+2.5 carats. The distribution of the remainder is shown
+below:
+
+```{r}
+smaller %>% 
+  ggplot(aes(carat)) + 
+  geom_freqpoly(binwidth = 0.01)
+```
+
+The most strinking feature is the spikes right at/after the quarter carat marks.  
+
+##27.4.7  
+**1. Add a section that explores how diamond sizes vary by cut, colour, and clarity. Assume you're writing a report for someone who doesn't know R, and instead of setting echo = FALSE on each chunk, set a global option.**  
+
+You can't see this, but I would do "r setup, echo = FALSE" in the setup chunk.
+
+```{r, echo = FALSE}
+smaller %>%
+  ggplot(aes(cut)) +
+  geom_bar(aes(fill = color))
+
+smaller %>%
+  ggplot(aes(clarity)) +
+  geom_bar(aes(fill = cut))
+```
+
+
+
+**2. Download diamond-sizes.Rmd from https://github.com/hadley/r4ds/tree/master/rmarkdown. Add a section that describes the largest 20 diamonds, including a table that displays their most important attributes.**  
+
+All of the top 20 diamonds are over 3 carats, with only two Ideal cuts. All but 3 diamonds are over $10,000.  
+
+```{r}
+top20 <- diamonds %>%
+  arrange(desc(carat)) %>%
+  head(20)
+
+top20 %>%
+  select(carat, cut, color, clarity, price)
+
+```
+
+
+
+
+
+**3. Modify diamonds-sizes.Rmd to use comma() to produce nicely formatted output. Also include the percentage of diamonds that are larger than 2.5 carats.**  
+
+I added the comma function from the exercises and used it to format price nicely. Also, .002% of the diamonds are larger than 2.5 carats. There's not a great place to put that in here.
+```{r}
+
+smaller <- diamonds %>% 
+  filter(carat <= 2.5)
+comma <- function(x) format(x, digits = 2, big.mark = ",")
+```
+
+
+```{r, echo = FALSE}
+top20 %>%
+  select(carat, cut, color, clarity, price) %>%
+  mutate(price = comma(price)) %>%
+  arrange(desc(price))
+```
+
+**4. Set up a network of chunks where d depends on c and b, and both b and c depend on a. Have each chunk print lubridate::now(), set cache = TRUE, then verify your understanding of caching.**  
+
+I didn't totally understand the point of this question, or maybe I didn't do it right. Each chunk has cache = TRUE, but since it's using lubridate::now() the output of chunk "a" will always change. Additionally, I don't see how each chunk printing now() could have a dependency on any other chunk. I think I understand just fine how caching works, I just don't understand how this exercise is helpful.  
+
+```{r a, cache = TRUE}
+print(lubridate::now())
+```
+
+```{r b, cache = TRUE, dependson = "a"}
+print(lubridate::now())
+```
+
+```{r c, cache = TRUE, dependson="a"}
+print(lubridate::now())
+```
+
+```{r d, dependson="b", dependson="c"}
+print(lubridate::now())
+```
