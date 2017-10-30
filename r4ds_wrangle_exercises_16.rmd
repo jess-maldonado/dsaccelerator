@@ -2,8 +2,9 @@
 title: "r4ds_wrangle_exercises_16"
 author: "Jessica Maldonado"
 date: "October 18, 2017"
-output: html_document:
-  keep_md = TRUE
+output: 
+  html_document:
+    keep_md: true
 ---
 
 ```{r setup, include=FALSE}
@@ -11,7 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(lubridate)
 library(nycflights13)
-eval = TRUE
 ```
 
 
