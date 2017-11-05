@@ -3,7 +3,7 @@ Jessica Maldonado
 November 5, 2017  
 
 
-##28.2.1  
+## 28.2.1  
 **1. Create one plot on the fuel economy data with customised title, subtitle, caption, x, y, and colour labels.**  
 
 
@@ -24,7 +24,7 @@ ggplot(mpg, aes(hwy, cty)) +
 
 **2. The geom_smooth() is somewhat misleading because the hwy for large engines is skewed upwards due to the inclusion of lightweight sports cars with big engines. Use your modelling tools to fit and display a better model.** 
 
-I had the geom_smooth use a subset of data tha t excluded class "2seater".  
+I had the geom_smooth use a subset of data that excluded class "2seater".  
 
 
 ```r
@@ -71,7 +71,7 @@ gss_cat %>%
 
 ![](r4ds_communicate_exercises_28_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
-##28.3.1
+## 28.3.1
 
 **1. Use geom_text() with infinite positions to place text at the four corners of the plot.**  
 I created 4 labels with combinations of positive and negative infinity to place labels on the edge of each corner.  
@@ -181,7 +181,7 @@ ggplot(mpg, aes(displ, hwy)) +
 
 ![](r4ds_communicate_exercises_28_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
-##28.4.4
+## 28.4.4
 
 **1. Why doesn't the following code override the default scale?**  
 
@@ -235,7 +235,7 @@ presidential %>%
 
 ![](r4ds_communicate_exercises_28_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
   
-1. Improving the display of the y axis.  
+2. Improving the display of the y axis.  
 
 ```r
 presidential %>%
@@ -250,7 +250,7 @@ presidential %>%
 
 ![](r4ds_communicate_exercises_28_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
   
-1. Labelling each term with the name of the president.  
+3. Labelling each term with the name of the president.  
 
 ```r
 presidential %>%
@@ -265,7 +265,7 @@ presidential %>%
 ```
 
 ![](r4ds_communicate_exercises_28_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
-1. Adding informative plot labels.  
+4. Adding informative plot labels.  
 
 ```r
 presidential %>%
@@ -282,7 +282,7 @@ presidential %>%
 
 ![](r4ds_communicate_exercises_28_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
   
-1. Placing breaks every 4 years (this is trickier than it seems!).
+5. Placing breaks every 4 years (this is trickier than it seems!).
 
 ```r
 presidential %>%
