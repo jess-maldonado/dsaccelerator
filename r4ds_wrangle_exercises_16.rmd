@@ -2,7 +2,9 @@
 title: "r4ds_wrangle_exercises_16"
 author: "Jessica Maldonado"
 date: "October 18, 2017"
-output: html_document
+output: 
+  html_document:
+    keep_md: true
 ---
 
 ```{r setup, include=FALSE}
