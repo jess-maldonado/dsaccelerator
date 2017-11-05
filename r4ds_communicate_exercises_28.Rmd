@@ -12,7 +12,7 @@ library(forcats)
 library(hexbin)
 ```
 
-##28.2.1  
+## 28.2.1  
 **1. Create one plot on the fuel economy data with customised title, subtitle, caption, x, y, and colour labels.**  
 
 ```{r}
@@ -63,7 +63,7 @@ gss_cat %>%
        y = "Proportion of population")
 ```
 
-##28.3.1
+## 28.3.1
 
 **1. Use geom_text() with infinite positions to place text at the four corners of the plot.**  
 I created 4 labels with combinations of positive and negative infinity to place labels on the edge of each corner.  
@@ -155,7 +155,7 @@ ggplot(mpg, aes(displ, hwy)) +
                arrow = arrow(angle = 30, length = unit(.25, "inches"), ends = "first", type = "open"))
 ```
 
-##28.4.4
+## 28.4.4
 
 **1. Why doesn't the following code override the default scale?**  
 
